@@ -382,9 +382,14 @@ object Parts {
         ),
     )
 
-    private val byId: Map<String, Part> = all.associateBy { it.id }
+    /**
+     * Named `index` rather than `byId`. A property and a function may share a name in Kotlin,
+     * but a lookup function whose body reads a map of the same name is a puzzle for the next
+     * person and a resolution question for the compiler, for no benefit.
+     */
+    private val index: Map<String, Part> = all.associateBy { it.id }
 
-    fun byId(id: String): Part? = byId[id]
+    fun byId(id: String): Part? = index[id]
 
     fun inCategory(category: PartCategory): List<Part> = all.filter { it.category == category }
 }

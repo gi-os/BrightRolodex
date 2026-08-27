@@ -54,9 +54,10 @@ data class Person(
      * Archived: keeps the person and everything remembered about them, and takes them out of
      * the deck and out of search.
      *
-     * Deliberately not the same thing as [Dismissals], which is about address-book rows that
-     * were never in the rolodex to begin with. Hiding someone here is "not now"; dismissing a
-     * contact there is "this person is not a rolodex person".
+     * Deliberately not the same thing as the dismissals in
+     * [RolodexStore.readDismissed], which are about address-book rows that were never in the
+     * rolodex to begin with. Hiding someone here is "not now"; dismissing a contact there is
+     * "this person is not a rolodex person".
      */
     val hidden: Boolean = false,
     /** Manual for people with no number, from the call log for people with one. */

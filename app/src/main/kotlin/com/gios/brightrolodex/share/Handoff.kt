@@ -28,10 +28,15 @@ object Handoff {
      *
      * First choice is BrightChat directly, with the recipient in an `address` extra — the same
      * shape its share-in path already understands, so a message starts in the right thread with
-     * no chooser. That path is `text/plain`, and **BrightChat currently only declares
-     * `ACTION_SEND` for `image/*`**, so on today's builds this resolves to nothing and falls
-     * through. It is written this way on purpose: adding one `text/plain` filter over there
-     * turns this on, and until then `sms:` reaches whatever the phone's messaging app is.
+     * no chooser. That path is `text/plain`, and **BrightChat currently declares `ACTION_SEND`
+     * for image types only**, so on today's builds this resolves to nothing and falls through.
+     * It is written this way on purpose: adding one `text/plain` filter over there turns this
+     * on, and until then `sms:` reaches whatever the phone's messaging app is.
+     *
+     * (And no, the mime type above is not written with a wildcard. Kotlin nests block comments,
+     * so a slash-star inside a KDoc opens a comment that never closes — and the error surfaces
+     * at the *end* of the file, as an unclosed comment plus a pile of unresolved references in
+     * whatever calls it. This exact typo has cost this family a CI run before.)
      */
     fun text(context: Context, person: Person): Boolean {
         val number = person.phones.firstOrNull()?.let { Phone.dialable(it) } ?: return false
