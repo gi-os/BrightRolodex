@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  BrightRolodex launcher mark: a drawn face on a card, on the rolodex's spindle rail.
+
+  One of the unified Bright* set — 108 canvas, 18..90 safe zone, white on black, no greys and
+  no colour anywhere. Stroked rather than filled, because the whole app is line art and a solid
+  glyph next to Roll and Collect in the launcher would read as a different family.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- The card. -->
+    <path
+        android:pathData="M28,32 L80,32 Q84,32 84,36 L84,84 Q84,88 80,88 L28,88 Q24,88 24,84 L24,36 Q24,32 28,32 Z"
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- The spindle rail, and the two hooks the card hangs from. -->
+    <path
+        android:pathData="M18,26 L90,26"
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M40,32 L40,22 M68,32 L68,22"
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+
+    <!-- The face: head, two eyes, a mouth. -->
+    <path
+        android:pathData="M54,44 C63,44 69,51 69,60 C69,69 63,76 54,76 C45,76 39,69 39,60 C39,51 45,44 54,44 Z"
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M48,57 L48,58 M60,57 L60,58"
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M47,66 Q54,72 61,66"
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+</vector>

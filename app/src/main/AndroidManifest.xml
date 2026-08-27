@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        No INTERNET. Nothing in this app talks to a network: the faces are drawn on the phone,
+        the people are in the address book, and there is no sync and no reporter. build.yml
+        fails the release if a dependency ever quietly adds it back.
+    -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!--
+        The address book, read and written.
+
+        WRITE is the load-bearing one and the reason this app is not a private list: a person
+        entered here becomes a real contact, so LightOS's own Contacts app and the stock dialer
+        name them on an incoming call. See contacts/SystemContacts.kt for why they are written
+        to the *local device account* rather than to an account of this app's own.
+    -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+
+    <!-- Placing a call from a card, rather than handing the number to the dialer's keypad. -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+
+    <!--
+        **Package visibility.** From Android 11 an app cannot see another app's activities
+        unless it says which ones it is looking for, and `resolveActivity` returns null for
+        everything else. Roll once shipped a send button that reported "LightChat can't receive
+        photos" on a phone with LightChat installed for exactly this reason: the intent
+        resolved fine, we just could not see that it did.
+    -->
+    <queries>
+        <package android:name="com.gios.brightchat" />
+        <package android:name="com.gios.lightchat" />
+        <package android:name="com.gios.lightnotebook" />
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="text/plain" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="sms" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".RolodexApp"
+        android:allowBackup="true"
+        android:hardwareAccelerated="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="Rolodex"
+        android:supportsRtl="false"
+        android:theme="@style/Theme.BrightRolodex">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="Rolodex"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.BrightRolodex"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!--
+                brightrolodex://person/<id> — how another app opens a card. Same shape as
+                brightcollect://sticker and brightrecorder://clip.
+
+                DEFAULT only, no BROWSABLE: a BROWSABLE filter means any web page can aim this
+                app at any card, and there is nothing here worth that.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="brightrolodex" android:host="person" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            The faces, offered to the rest of the family — BrightChat's thread rows and
+            BrightControl's notification banners.
+
+            exported=true is required for a cross-app ContentProvider and gives away very
+            little: this provider serves PNGs of faces the user drew, keyed by phone number,
+            and refuses every write. The notes, the facts and the relationships are not
+            reachable through it at all.
+
+            **Not** guarded by a signature-level permission, which was the first instinct and
+            is wrong here: the Bright* apps are not all signed with the same key. BrightChat's
+            keystore is a repository secret with its own certificate, so a signature permission
+            declared by this app would lock out exactly the app the provider exists to serve.
+            The gate is in the provider instead — the calling package must be one of the
+            family — the same shape as BrightCollect's backup provider.
+        -->
+        <provider
+            android:name=".share.FaceProvider"
+            android:authorities="com.gios.brightrolodex.faces"
+            android:exported="true" />
+
+    </application>
+
+</manifest>
