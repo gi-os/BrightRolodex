@@ -1,5 +1,7 @@
 # Rolodex
 
+[**⬇ Download the latest APK**](https://github.com/gi-os/BrightRolodex/releases/latest) · free, open source.
+
 A rolodex for people you know, not just people you can dial. For the Light Phone III.
 
 Your address book holds everyone you have ever had a number for. A rolodex holds the people you
