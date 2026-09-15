@@ -115,3 +115,9 @@ height, three colours, no ripples, and a 45 ms tick on finger-down rather than o
 It is a plain sideloaded APK and not an SDK tool because it could not be one: the SDK's Gradle
 plugin blocks `contentResolver`, `Context` and `Intent` at configure time, and `READ_CONTACTS`
 is not on its allowlist. A contacts app needs all four.
+
+## Support
+
+These apps are free, open, and built on my own time. Sponsorship pays the bills that don't go away: build servers, test hardware, and the crash reporter that keeps them shipping. Donation or not my code is always free for the world to use.
+
+[Sponsor on GitHub](https://github.com/sponsors/gi-os)
