@@ -4,6 +4,11 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+val keystoreFile = providers.environmentVariable("KEYSTORE_FILE").orNull
+val keystorePassword = providers.environmentVariable("KEYSTORE_PASSWORD").orNull
+val releaseKeyAlias = providers.environmentVariable("KEY_ALIAS").orNull
+val releaseKeyPassword = providers.environmentVariable("KEY_PASSWORD").orNull
+
 android {
     namespace = "com.gios.brightrolodex"
     compileSdk = 35
@@ -27,45 +32,17 @@ android {
         ndk { abiFilters += "arm64-v8a" }
     }
 
-    /*
-     * The signing key is committed, and that is deliberate.
-     *
-     * Android identifies an app by (packageName, signing certificate). Every APK this family
-     * has ever shipped is a public GitHub release, so the certificate is already public and
-     * permanently so — a rotation was attempted once and reverted, because changing the cert
-     * breaks in-place updates with an opaque "Failure: Invalid" and the only cure is an
-     * uninstall, which wipes the user's data.
-     *
-     * So there is no secret to protect here, and pretending otherwise costs something real: a
-     * repository without a KEYSTORE_B64 secret builds an APK signed with the throwaway debug
-     * key, which will not update over a release and cannot be fixed later without an
-     * uninstall. Committing the key means the very first release is already the permanent
-     * identity of the app.
-     *
-     * The fallback below must be the debug config and never `null`. `signingConfig = null`
-     * produces an *unsigned* release, which Android will not install at all, and AGP names it
-     * `app-release-unsigned.apk` — so every path written for `app-release.apk` quietly refers
-     * to a file that is not there.
-     */
-    val keystoreFile = rootProject.file("keystore/brightrolodex.jks")
-    val keystorePassword: String = System.getenv("KEYSTORE_PASSWORD")
-        ?.takeUnless(String::isBlank)
-        ?: rootProject.file("keystore/password.txt")
-            .takeIf { it.exists() }
-            ?.readText()
-            ?.trim()
-            .orEmpty()
-    val canSignRelease = keystoreFile.exists() && keystorePassword.isNotEmpty()
-
-    signingConfigs {
-        if (canSignRelease) {
-            create("release") {
-                storeFile = keystoreFile
-                storePassword = keystorePassword
-                keyAlias = "brightrolodex"
-                keyPassword = keystorePassword
-            }
+    val releaseSigning = if (!keystoreFile.isNullOrBlank() && !keystorePassword.isNullOrBlank()
+        && !releaseKeyAlias.isNullOrBlank() && !releaseKeyPassword.isNullOrBlank()
+    ) {
+        signingConfigs.create("release") {
+            storeFile = rootProject.file(keystoreFile)
+            storePassword = keystorePassword
+            keyAlias = releaseKeyAlias
+            keyPassword = releaseKeyPassword
         }
+    } else {
+        null
     }
 
     buildTypes {
@@ -76,11 +53,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            signingConfig = if (canSignRelease) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            signingConfig = releaseSigning
         }
     }
 
