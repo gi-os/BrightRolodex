@@ -120,7 +120,11 @@ then replace `signing-fingerprint.txt` with signer #2's SHA-256 digest. Do not c
 the original fingerprint. Keep the original private key out of CI; it is only needed
 offline to create the lineage.
 
-In **Settings → Secrets and variables → Actions**, set these five secrets:
+In [BrightRolodex's environment settings](https://github.com/gi-os/BrightRolodex/settings/environments),
+create an environment named `release`. Under **Deployment branches and tags**, choose
+**Selected branches and tags** and add a single **Branch** rule for `main`, with no tag
+rules. Add the five secrets below to that environment only. Do not use repository-wide
+secrets or upload the original key or its passwords.
 
 | Secret | Value |
 | --- | --- |
@@ -133,11 +137,11 @@ In **Settings → Secrets and variables → Actions**, set these five secrets:
 On Linux, upload the files without printing their contents and enter the other values when prompted:
 
 ```sh
-base64 -w 0 brightrolodex-new.jks | gh secret set RELEASE_KEYSTORE_BASE64 --repo gi-os/BrightRolodex
-base64 -w 0 brightrolodex.lineage | gh secret set SIGNING_LINEAGE_BASE64 --repo gi-os/BrightRolodex
-gh secret set KEYSTORE_PASSWORD --repo gi-os/BrightRolodex
-gh secret set KEY_ALIAS --repo gi-os/BrightRolodex
-gh secret set KEY_PASSWORD --repo gi-os/BrightRolodex
+base64 -w 0 brightrolodex-new.jks | gh secret set RELEASE_KEYSTORE_BASE64 --env release --repo gi-os/BrightRolodex
+base64 -w 0 brightrolodex.lineage | gh secret set SIGNING_LINEAGE_BASE64 --env release --repo gi-os/BrightRolodex
+gh secret set KEYSTORE_PASSWORD --env release --repo gi-os/BrightRolodex
+gh secret set KEY_ALIAS --env release --repo gi-os/BrightRolodex --body brightrolodex-release
+gh secret set KEY_PASSWORD --env release --repo gi-os/BrightRolodex
 ```
 
 CI signs with the new key using APK Signature Scheme v3 and verifies the proof of rotation

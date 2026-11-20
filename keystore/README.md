@@ -4,8 +4,9 @@ The original `brightrolodex.jks` and `password.txt` were publicly committed. Tre
 private key as compromised; removing the files does not remove them from git history.
 A public certificate is safe to publish, but its private signing key is not.
 
-Release CI restores a replacement key and signing lineage from GitHub Actions secrets,
-then signs with APK Signature Scheme v3. The lineage must connect the original certificate
+Release CI restores a replacement key and signing lineage from secrets in the GitHub Actions
+`release` environment, restricted to the `main` branch, never repository-wide secrets.
+It then signs with APK Signature Scheme v3. The lineage must connect the original certificate
 pinned in `signing-lineage-root-fingerprint.txt` to the replacement certificate pinned in
 `signing-fingerprint.txt`, preserving installed data without granting signer rollback.
 
