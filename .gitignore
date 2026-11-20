@@ -10,5 +10,6 @@
 .cxx
 .kotlin
 
-# NOTE: keystore/*.jks is deliberately NOT ignored here, unlike BrightCollect.
-# See keystore/README.md — the signing key is committed on purpose in this family.
+*.jks
+*.keystore
+/keystore/password.txt

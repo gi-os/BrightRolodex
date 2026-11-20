@@ -81,9 +81,10 @@ Nothing else to do — no adb grants, unlike most of this family.
 ./gradlew :app:assembleRelease :app:testDebugUnitTest
 ```
 
-JDK 17, `compileSdk` 35, arm64 only. The signing key is committed on purpose — see
-[keystore/README.md](keystore/README.md) — so a local release build is signed with the same
-certificate as a published one and updates in place over it.
+JDK 17, `compileSdk` 35, arm64 only. Without all four signing environment variables
+(`KEYSTORE_FILE`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`), release builds are
+unsigned; debug builds use the standard Android debug key. Neither can update a
+production install. See [keystore/README.md](keystore/README.md).
 
 This app does **not** depend on `com.gios:light-common`, unlike the rest of the family. GitHub
 Packages has no anonymous read even for a public package, and a new repository's own
@@ -92,6 +93,67 @@ the first CI run of a fresh repo fails on "Could not find com.gios:light-common"
 exactly like a credentials bug and is not one. The ~120 lines of wheel handling it needed are
 vendored in `hw/` instead. The crash reporter and the LightSync backup provider are the two
 things that costs, and they land once the repository has `GPR_USER` / `GPR_TOKEN` secrets.
+
+### Release signing
+
+Before merging the signing change, disable **Build & Release APK** so the merge does
+not publish. In a private directory outside the checkout, use Android Build Tools
+35.0.0 to generate the replacement key and create a proof of rotation from the original
+release key. The original alias is `brightrolodex`; its keystore and key password are the
+same value from the old `keystore/password.txt` in git history or Giovanni’s local copy.
+Use that old password only for the old signer, and fresh passwords for the replacement key.
+
+```sh
+keytool -genkeypair -storetype JKS -keystore brightrolodex-new.jks -alias brightrolodex-release \
+  -keyalg RSA -keysize 3072 -validity 10000
+
+apksigner rotate --out brightrolodex.lineage \
+  --old-signer --ks /path/to/original/brightrolodex.jks --ks-key-alias brightrolodex \
+  --set-installed-data true --set-rollback false \
+  --new-signer --ks brightrolodex-new.jks --ks-key-alias brightrolodex-release
+
+apksigner lineage --in brightrolodex.lineage --print-certs
+```
+
+Verify that signer #1's SHA-256 digest matches `signing-lineage-root-fingerprint.txt`,
+then replace `signing-fingerprint.txt` with signer #2's SHA-256 digest. Do not change
+the original fingerprint. Keep the original private key out of CI; it is only needed
+offline to create the lineage.
+
+In [BrightRolodex's environment settings](https://github.com/gi-os/BrightRolodex/settings/environments),
+create an environment named `release`. Under **Deployment branches and tags**, choose
+**Selected branches and tags** and add a single **Branch** rule for `main`, with no tag
+rules. Add the five secrets below to that environment only. Do not use repository-wide
+secrets or upload the original key or its passwords.
+
+| Secret | Value |
+| --- | --- |
+| `RELEASE_KEYSTORE_BASE64` | Base64-encoded `brightrolodex-new.jks` |
+| `SIGNING_LINEAGE_BASE64` | Base64-encoded `brightrolodex.lineage` |
+| `KEYSTORE_PASSWORD` | New keystore password |
+| `KEY_ALIAS` | `brightrolodex-release` |
+| `KEY_PASSWORD` | New key password |
+
+On Linux, upload the files without printing their contents and enter the other values when prompted:
+
+```sh
+base64 -w 0 brightrolodex-new.jks | gh secret set RELEASE_KEYSTORE_BASE64 --env release --repo gi-os/BrightRolodex
+base64 -w 0 brightrolodex.lineage | gh secret set SIGNING_LINEAGE_BASE64 --env release --repo gi-os/BrightRolodex
+gh secret set KEYSTORE_PASSWORD --env release --repo gi-os/BrightRolodex
+gh secret set KEY_ALIAS --env release --repo gi-os/BrightRolodex --body brightrolodex-release
+gh secret set KEY_PASSWORD --env release --repo gi-os/BrightRolodex
+```
+
+CI signs with the new key using APK Signature Scheme v3 and verifies the proof of rotation
+from the original pin to the new pin. BrightRolodex requires Android API 33, so no supported
+device needs a v1/v2 signature or the old private key. Android can accept an in-place update,
+but a catalog that compares only the current certificate can still hide it from users on
+the old signer. Coordinate the BrightMarket catalog/updater transition before re-enabling
+publishing, and only re-enable it for an authorized release.
+
+A push to `main` (other than Markdown-only changes) or a manual run of `build.yml` builds,
+signs, tags, and publishes. Tag pushes do not trigger it. Branch and PR checks
+in `check.yml` publish nothing.
 
 ### Layout
 
